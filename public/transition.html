@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preparing Your Form</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.6s ease;
+            text-align: center;
+            padding: 50px 30px;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+
+        .loader-circle {
+            width: 100%;
+            height: 100%;
+            border: 4px solid transparent;
+            border-top: 4px solid #4361ee;
+            border-right: 4px solid #4361ee;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loader-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 3px solid transparent;
+            border-bottom: 3px solid #3a56d4;
+            border-left: 3px solid #3a56d4;
+            border-radius: 50%;
+            animation: spinReverse 1.5s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spinReverse {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(-360deg); }
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 30px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4361ee, #4cc9f0);
+            border-radius: 4px;
+            animation: progress 2s ease-in-out forwards;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        .checklist {
+            text-align: left;
+            max-width: 300px;
+            margin: 30px auto;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            opacity: 0;
+            transform: translateX(-10px);
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .checklist-item:nth-child(1) { animation-delay: 0.2s; }
+        .checklist-item:nth-child(2) { animation-delay: 0.4s; }
+        .checklist-item:nth-child(3) { animation-delay: 0.6s; }
+
+        .checklist-item i {
+            color: #4CAF50;
+            font-size: 1.2rem;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .status-text {
+            font-size: 0.9rem;
+            color: #4361ee;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: #4361ee;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #3a56d4;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loader">
+            <div class="loader-circle"></div>
+            <div class="loader-inner"></div>
+        </div>
+        
+        <h1>Preparing Your Application Form</h1>
+        <p>We're getting everything ready for you. This will only take a moment...</p>
+        
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+        </div>
+        
+        <div class="checklist">
+            <div class="checklist-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Loading application interface</span>
+            </div>
+            <div class="checklist-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Initializing secure connection</span>
+            </div>
+            <div class="checklist-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Preparing form sections</span>
+            </div>
+        </div>
+        
+        <div class="status-text" id="status">Initializing...</div>
+        
+        <a href="/" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const status = document.getElementById('status');
+            const statusMessages = [
+                'Initializing secure connection...',
+                'Loading form components...',
+                'Preparing validation systems...',
+                'Almost ready...',
+                'Redirecting to application form...'
+            ];
+            
+            let currentStatus = 0;
+            
+            // Update status text every 400ms
+            const statusInterval = setInterval(() => {
+                if (currentStatus < statusMessages.length) {
+                    status.textContent = statusMessages[currentStatus];
+                    currentStatus++;
+                } else {
+                    clearInterval(statusInterval);
+                }
+            }, 400);
+            
+            // Redirect after 2.5 seconds
+            setTimeout(() => {
+                window.location.href = 'survey.html';
+            }, 2500);
+            
+            // Optional: Allow manual navigation if auto-redirect fails
+            setTimeout(() => {
+                const backLink = document.querySelector('.back-link');
+                backLink.innerHTML = '<i class="fas fa-exclamation-circle"></i> Taking too long? Click here to try again';
+                backLink.href = 'survey.html';
+            }, 4000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Rental Assistance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .header h1 i {
+            color: #4361ee;
+            margin-right: 10px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, #4361ee, #3a0ca3);
+        }
+
+        .stat-card:nth-child(2)::before { background: linear-gradient(to bottom, #7209b7, #560bad); }
+        .stat-card:nth-child(3)::before { background: linear-gradient(to bottom, #4cc9f0, #3a86ff); }
+        .stat-card:nth-child(4)::before { background: linear-gradient(to bottom, #f8961e, #f3722c); }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            color: #4361ee;
+            margin-bottom: 15px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr 350px;
+            }
+        }
+
+        .applications-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-header {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(233, 236, 239, 0.5);
+        }
+
+        @media (min-width: 768px) {
+            .section-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .section-header h2 {
+            color: #333;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .search-box {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid rgba(233, 236, 239, 0.8);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #4361ee;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+            background: white;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid rgba(222, 226, 230, 0.5);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: white;
+            border-bottom: 2px solid rgba(222, 226, 230, 0.5);
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(222, 226, 230, 0.5);
+            color: #333;
+        }
+
+        tr:hover {
+            background: rgba(67, 97, 238, 0.05);
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 0.85rem;
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+            color: white;
+            box-shadow: 0 3px 10px rgba(67, 97, 238, 0.2);
+        }
+
+        .btn-view:hover {
+            background: linear-gradient(135deg, #3a56d4 0%, #2a46b4 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #f72585 0%, #e11573 100%);
+            color: white;
+            box-shadow: 0 3px 10px rgba(247, 37, 133, 0.2);
+        }
+
+        .btn-delete:hover {
+            background: linear-gradient(135deg, #e11573 0%, #c10b63 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(247, 37, 133, 0.3);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, #4cc9f0 0%, #3a86ff 100%);
+            color: white;
+            box-shadow: 0 3px 10px rgba(76, 201, 240, 0.2);
+        }
+
+        .btn-export:hover {
+            background: linear-gradient(135deg, #3a86ff 0%, #2a76ef 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 201, 240, 0.3);
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 900px;
+            border-radius: 15px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 1.2rem;
+            border-radius: 10px;
+            border-left: 4px solid #4361ee;
+        }
+
+        .detail-item h4 {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-item p {
+            font-size: 1.1rem;
+            color: #333;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .ssn-display {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+            color: #856404;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .image-preview {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #dee2e6;
+        }
+
+        @media (min-width: 768px) {
+            .image-preview {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+
+        .image-preview img {
+            width: 100%;
+            max-width: 250px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .image-preview img:hover {
+            transform: scale(1.05);
+            border-color: #4361ee;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(233, 236, 239, 0.3);
+            border-radius: 50%;
+            border-top-color: #4361ee;
+            animation: spin 1s ease-in-out infinite;
+            margin: 40px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #e9ecef;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #f72585 0%, #e11573 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 3px 10px rgba(247, 37, 133, 0.2);
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #e11573 0%, #c10b63 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(247, 37, 133, 0.3);
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .sidebar-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .activity-item {
+            padding: 0.8rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #4361ee;
+            font-size: 0.9rem;
+        }
+
+        .activity-item .time {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1001;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #f72585 0%, #c10b63 100%);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #f8961e 0%, #e76f51 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard - Rental Assistance</h1>
+            <div style="display: flex; gap: 15px;">
+                <button class="btn btn-export" onclick="exportData()">
+                    <i class="fas fa-download"></i> Export CSV
+                </button>
+                <a href="/" class="logout-btn">
+                    <i class="fas fa-home"></i> Back to Home
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+                <div class="stat-value" id="totalApplications">0</div>
+                <div class="stat-label">Total Applications</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-value" id="totalRentOwed">$0</div>
+                <div class="stat-label">Total Rent Owed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-value" id="avgRentOwed">$0</div>
+                <div class="stat-label">Average Rent Owed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-value" id="receivingSS">0</div>
+                <div class="stat-label">Receiving Social Security</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Applications Table -->
+            <div class="applications-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-list"></i> Applications Management</h2>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search by name, email, phone, SSN...">
+                    </div>
+                </div>
+
+                <div class="admin-actions">
+                    <button class="btn btn-view" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button class="btn" onclick="clearSearch()" style="background: #6c757d; color: white;">
+                        <i class="fas fa-times"></i> Clear Search
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table id="applicationsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>SSN</th>
+                                <th>City</th>
+                                <th>Past Due Rent</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="applicationsBody">
+                            <!-- Applications will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No Applications Found</h3>
+                    <p>When applications are submitted, they will appear here.</p>
+                </div>
+                <div id="loading" class="loading"></div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button class="btn btn-view" onclick="showAllApplications()">
+                            <i class="fas fa-eye"></i> View All
+                        </button>
+                        <button class="btn btn-export" onclick="printApplications()">
+                            <i class="fas fa-print"></i> Print List
+                        </button>
+                        <button class="btn" style="background: #6c757d; color: white;" onclick="showActivityLog()">
+                            <i class="fas fa-history"></i> View Logs
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                    <div class="activity-list" id="activityList">
+                        <div class="activity-item">
+                            <div>Dashboard loaded</div>
+                            <div class="time">Just now</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-info-circle"></i> System Info</h3>
+                    <div style="font-size: 0.9rem; color: #666; line-height: 1.6;">
+                        <p><strong>Total Records:</strong> <span id="recordCount">0</span></p>
+                        <p><strong>Last Updated:</strong> <span id="lastUpdated">Never</span></p>
+                        <p><strong>Session:</strong> Active</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Detail Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user"></i> Application Details</h2>
+                <button class="btn btn-delete" onclick="closeModal()">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationMessage">Operation successful!</span>
+    </div>
+
+    <script>
+        // DOM Elements
+        const applicationsBody = document.getElementById('applicationsBody');
+        const loading = document.getElementById('loading');
+        const emptyState = document.getElementById('emptyState');
+        const searchInput = document.getElementById('searchInput');
+        const detailModal = document.getElementById('detailModal');
+        const modalBody = document.getElementById('modalBody');
+        const notification = document.getElementById('notification');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const activityList = document.getElementById('activityList');
+        const recordCount = document.getElementById('recordCount');
+        const lastUpdated = document.getElementById('lastUpdated');
+
+        // State
+        let applications = [];
+        let searchTimeout = null;
+        let adminPassword = '';
+
+        // Get password from URL or session
+        function getAdminPassword() {
+            // Try to get from URL first
+            const urlParams = new URLSearchParams(window.location.search);
+            adminPassword = urlParams.get('password') || 'admin123';
+            return adminPassword;
+        }
+
+        // Add activity log
+        function addActivity(message) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            const activityItem = document.createElement('div');
+            activityItem.className = 'activity-item';
+            activityItem.innerHTML = `
+                <div>${message}</div>
+                <div class="time">${timeString}</div>
+            `;
+            
+            activityList.insertBefore(activityItem, activityList.firstChild);
+            
+            // Keep only last 5 activities
+            while (activityList.children.length > 5) {
+                activityList.removeChild(activityList.lastChild);
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            notificationMessage.textContent = message;
+            notification.className = 'notification';
+            
+            const icon = notification.querySelector('i');
+            if (type === 'error') {
+                notification.classList.add('error');
+                icon.className = 'fas fa-exclamation-circle';
+            } else if (type === 'warning') {
+                notification.classList.add('warning');
+                icon.className = 'fas fa-exclamation-triangle';
+            } else {
+                icon.className = 'fas fa-check-circle';
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            getAdminPassword();
+            loadStats();
+            loadApplications();
+            setupEventListeners();
+            addActivity('Dashboard initialized');
+            updateLastUpdated();
+        });
+
+        function setupEventListeners() {
+            // Search input with debounce
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchApplications(e.target.value);
+                }, 300);
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+                if (e.key === 'r' && e.ctrlKey) {
+                    e.preventDefault();
+                    refreshData();
+                }
+                if (e.key === 's' && e.ctrlKey) {
+                    e.preventDefault();
+                    searchInput.focus();
+                }
+            });
+        }
+
+        // Update last updated time
+        function updateLastUpdated() {
+            const now = new Date();
+            lastUpdated.textContent = now.toLocaleTimeString();
+        }
+
+        async function loadStats() {
+            try {
+                const password = getAdminPassword();
+                const response = await fetch(`/api/admin/stats?password=${encodeURIComponent(password)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const stats = await response.json();
+                
+                document.getElementById('totalApplications').textContent = stats.total_applications || 0;
+                document.getElementById('totalRentOwed').textContent = 
+                    '$' + (parseFloat(stats.total_rent_owed) || 0).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                document.getElementById('avgRentOwed').textContent = 
+                    '$' + (parseFloat(stats.avg_rent_owed) || 0).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                document.getElementById('receivingSS').textContent = stats.receiving_social_security || 0;
+                
+                recordCount.textContent = stats.total_applications || 0;
+                
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                showNotification('Error loading statistics', 'error');
+            }
+        }
+
+        async function loadApplications() {
+            loading.style.display = 'block';
+            emptyState.style.display = 'none';
+            
+            try {
+                const password = getAdminPassword();
+                const response = await fetch(`/api/admin/applications?password=${encodeURIComponent(password)}`);
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Unauthorized - Invalid password');
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                applications = await response.json();
+                renderApplications(applications);
+                addActivity(`Loaded ${applications.length} applications`);
+                updateLastUpdated();
+                
+            } catch (error) {
+                console.error('Error loading applications:', error);
+                showNotification(error.message || 'Error loading applications', 'error');
+                
+                // If unauthorized, redirect to login
+                if (error.message.includes('Unauthorized')) {
+                    setTimeout(() => {
+                        window.location.href = '/admin?error=unauthorized';
+                    }, 1500);
+                }
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function renderApplications(apps) {
+            applicationsBody.innerHTML = '';
+            
+            if (apps.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            apps.forEach(app => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>#${app.id}</strong></td>
+                    <td>${app.full_name}</td>
+                    <td>${app.email}</td>
+                    <td>${app.phone || 'N/A'}</td>
+                    <td style="font-family: monospace; letter-spacing: 1px; font-weight: 500;">${app.ssn || 'N/A'}</td>
+                    <td>${app.city || 'N/A'}</td>
+                    <td><strong>$${parseFloat(app.past_due_rent).toFixed(2)}</strong></td>
+                    <td>${new Date(app.submitted_at).toLocaleDateString()}<br>
+                        <small style="color: #666;">${new Date(app.submitted_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                    </td>
+                    <td class="actions-cell">
+                        <button class="btn btn-sm btn-view" onclick="viewApplication(${app.id})" title="View Details">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="btn btn-sm btn-delete" onclick="deleteApplication(${app.id})" title="Delete Application">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </td>
+                `;
+                applicationsBody.appendChild(row);
+            });
+        }
+
+        async function viewApplication(id) {
+            try {
+                const password = getAdminPassword();
+                const response = await fetch(`/api/admin/applications/${id}?password=${encodeURIComponent(password)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const application = await response.json();
+                
+                modalBody.innerHTML = `
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <h4>Full Name</h4>
+                            <p>${application.full_name}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>Email</h4>
+                            <p>${application.email}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>Phone</h4>
+                            <p>${application.phone || 'N/A'}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>Date of Birth</h4>
+                            <p>${application.dob}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>Age</h4>
+                            <p>${application.age}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>Gender</h4>
+                            <p>${application.gender}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>City</h4>
+                            <p>${application.city}</p>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 1.5rem 0;">
+                        <div class="ssn-display">
+                            <div style="font-size: 0.9rem; margin-bottom: 5px;">Social Security Number</div>
+                            ${application.ssn || 'N/A'}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <h4>Past Due Rent</h4>
+                            <p>$${parseFloat(application.past_due_rent).toFixed(2)}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>Applied Before</h4>
+                            <p>${application.applied_before}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>Receiving Social Security</h4>
+                            <p>${application.receiving_ss}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>Verified by ID.me</h4>
+                            <p>${application.verified_idme}</p>
+                        </div>
+                        <div class="detail-item">
+                            <h4>Submitted At</h4>
+                            <p>${new Date(application.submitted_at).toLocaleString()}</p>
+                        </div>
+                        ${application.mothers_maiden_name ? `
+                        <div class="detail-item">
+                            <h4>Mother's Maiden Name</h4>
+                            <p>${application.mothers_maiden_name}</p>
+                        </div>` : ''}
+                        ${application.fathers_name ? `
+                        <div class="detail-item">
+                            <h4>Father's Name</h4>
+                            <p>${application.fathers_name}</p>
+                        </div>` : ''}
+                    </div>
+                    
+                    ${application.dl_front || application.dl_back ? `
+                    <h3 style="margin-top: 2rem; border-bottom: 2px solid #dee2e6; padding-bottom: 10px;">
+                        <i class="fas fa-id-card"></i> Driver's License Images
+                    </h3>
+                    <div class="image-preview">
+                        ${application.dl_front ? `
+                        <div style="text-align: center;">
+                            <h4>Front</h4>
+                            <img src="/uploads/${application.dl_front}" alt="License Front" 
+                                 onclick="window.open('/uploads/${application.dl_front}', '_blank')">
+                            <p style="margin-top: 8px; font-size: 0.8rem; color: #666;">Click to view full size</p>
+                        </div>` : ''}
+                        ${application.dl_back ? `
+                        <div style="text-align: center;">
+                            <h4>Back</h4>
+                            <img src="/uploads/${application.dl_back}" alt="License Back"
+                                 onclick="window.open('/uploads/${application.dl_back}', '_blank')">
+                            <p style="margin-top: 8px; font-size: 0.8rem; color: #666;">Click to view full size</p>
+                        </div>` : ''}
+                    </div>` : ''}
+                    
+                    <div style="margin-top: 2rem; display: flex; gap: 10px; justify-content: center;">
+                        <button class="btn btn-delete" onclick="deleteApplication(${application.id})">
+                            <i class="fas fa-trash"></i> Delete Application
+                        </button>
+                        <button class="btn" onclick="closeModal()" style="background: #6c757d; color: white;">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                    </div>
+                `;
+                
+                detailModal.style.display = 'flex';
+                addActivity(`Viewed application #${application.id}`);
+                
+            } catch (error) {
+                console.error('Error loading application:', error);
+                showNotification('Error loading application details', 'error');
+            }
+        }
+
+        async function deleteApplication(id) {
+            if (!confirm(`Are you sure you want to delete application #${id}?\n\nThis action cannot be undone and all associated data will be permanently removed.`)) {
+                return;
+            }
+            
+            try {
+                const password = getAdminPassword();
+                const response = await fetch(`/api/admin/applications/${id}?password=${encodeURIComponent(password)}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('Application deleted successfully');
+                    addActivity(`Deleted application #${id}`);
+                    loadApplications();
+                    loadStats();
+                    closeModal();
+                } else {
+                    throw new Error(result.error || 'Delete failed');
+                }
+                
+            } catch (error) {
+                console.error('Error deleting application:', error);
+                showNotification('Error deleting application', 'error');
+            }
+        }
+
+        async function searchApplications(query) {
+            if (!query.trim()) {
+                renderApplications(applications);
+                return;
+            }
+            
+            try {
+                const password = getAdminPassword();
+                const response = await fetch(`/api/admin/search?q=${encodeURIComponent(query)}&password=${encodeURIComponent(password)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const results = await response.json();
+                renderApplications(results);
+                addActivity(`Searched for: "${query}" (${results.length} results)`);
+                
+            } catch (error) {
+                console.error('Error searching:', error);
+                showNotification('Error searching applications', 'error');
+            }
+        }
+
+        function refreshData() {
+            loadApplications();
+            loadStats();
+            showNotification('Data refreshed successfully');
+            addActivity('Manually refreshed data');
+        }
+
+        function showAllApplications() {
+            renderApplications(applications);
+            searchInput.value = '';
+            showNotification('Showing all applications');
+        }
+
+        function clearSearch() {
+            searchInput.value = '';
+            renderApplications(applications);
+            showNotification('Search cleared');
+        }
+
+        function exportData() {
+            if (applications.length === 0) {
+                showNotification('No data to export', 'warning');
+                return;
+            }
+            
+            const headers = ['ID', 'Full Name', 'Email', 'Phone', 'SSN', 'City', 'Past Due Rent', 'Submitted At'];
+            const csvRows = [
+                headers.join(','),
+                ...applications.map(app => [
+                    app.id,
+                    `"${app.full_name.replace(/"/g, '""')}"`,
+                    `"${app.email}"`,
+                    `"${app.phone || ''}"`,
+                    `"${app.ssn}"`,
+                    `"${app.city}"`,
+                    app.past_due_rent,
+                    `"${new Date(app.submitted_at).toLocaleString()}"`
+                ].join(','))
+            ];
+            
+            const csvString = csvRows.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `applications_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('Data exported successfully');
+            addActivity('Exported data to CSV');
+        }
+
+        function printApplications() {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Applications List</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h1 { color: #333; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Rental Assistance Applications</h1>
+                    <p>Generated: ${new Date().toLocaleString()}</p>
+                    <p>Total Applications: ${applications.length}</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>SSN</th>
+                                <th>City</th>
+                                <th>Past Due Rent</th>
+                                <th>Submitted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${applications.map(app => `
+                                <tr>
+                                    <td>${app.id}</td>
+                                    <td>${app.full_name}</td>
+                                    <td>${app.email}</td>
+                                    <td>${app.phone || 'N/A'}</td>
+                                    <td>${app.ssn}</td>
+                                    <td>${app.city}</td>
+                                    <td>$${parseFloat(app.past_due_rent).toFixed(2)}</td>
+                                    <td>${new Date(app.submitted_at).toLocaleDateString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+            addActivity('Printed applications list');
+        }
+
+        function showActivityLog() {
+            alert('Activity log functionality would show detailed system logs here.');
+        }
+
+        function closeModal() {
+            detailModal.style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === detailModal) {
+                closeModal();
+            }
+        });
+
+        // Auto-refresh every 60 seconds
+        setInterval(() => {
+            loadStats();
+        }, 60000);
+    </script>
+</body>
+</html>
