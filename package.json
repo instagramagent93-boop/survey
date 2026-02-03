@@ -16,11 +16,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "better-sqlite3": "^12.6.2",
     "body-parser": "^1.20.4",
     "crypto": "^1.0.1",
     "express": "^4.22.1",
-    "multer": "^1.4.5-lts.1",
-    "sqlite3": "^5.1.7"
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
