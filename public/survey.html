@@ -105,6 +105,44 @@
             font-size: 1rem;
             transition: all 0.3s ease;
             background: white;
+            height: 48px;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Fix for date input alignment */
+        input[type="date"] {
+            font-family: inherit;
+            color: #333;
+            height: 48px;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0.6;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        input[type="date"]::-webkit-datetime-edit {
+            padding: 0;
+        }
+
+        input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+            padding: 0;
+        }
+
+        /* For Firefox */
+        input[type="date"] {
+            -moz-appearance: textfield;
+        }
+
+        input[type="date"]::-moz-focus-inner {
+            border: 0;
+            padding: 0;
         }
 
         input:focus, select:focus {
