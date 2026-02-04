@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Rental Assistance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .login-btn:hover {
+            background: #5a67d8;
+        }
+        
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>🔐 Admin Portal</h1>
+        <p class="subtitle">Rental Assistance Management</p>
+        
+        <div class="form-group">
+            <label for="password">Admin Password</label>
+            <input type="password" id="password" placeholder="Enter admin password">
+        </div>
+        
+        <button class="login-btn" onclick="login()">Login to Dashboard</button>
+        
+        <div class="error-message" id="errorMessage">
+            Invalid password. Please try again.
+        </div>
+        
+        <a href="/" class="back-link">← Back to Home Page</a>
+    </div>
+    
+    <script>
+        function login() {
+            const password = document.getElementById('password').value;
+            const errorElement = document.getElementById('errorMessage');
+            
+            // Clear previous error
+            errorElement.style.display = 'none';
+            
+            if (!password) {
+                errorElement.textContent = 'Please enter a password';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            // For demo: password is "admin123"
+            // In production, this should be a server-side check
+            if (password === 'admin123') {
+                // Redirect to dashboard with password in query string
+                window.location.href = `/admin?password=${encodeURIComponent(password)}`;
+            } else {
+                errorElement.textContent = 'Invalid password. Please try again.';
+                errorElement.style.display = 'block';
+            }
+        }
+        
+        // Allow Enter key to submit
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+        
+        // Auto-focus password field
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('password').focus();
+        });
+    </script>
+</body>
+</html>

